@@ -15,6 +15,13 @@
       --danger: #f87171;
       --ring: rgba(96,165,250,.45);
       --radius: 16px;
+      
+      /* 라운드별 배경색 */
+      --round1-bg: rgba(59, 130, 246, 0.15);
+      --round2-bg: rgba(239, 68, 68, 0.15);
+      --round3-bg: rgba(34, 197, 94, 0.15);
+      --round4-bg: rgba(168, 85, 247, 0.15);
+      --final-bg: rgba(251, 191, 36, 0.15);
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -40,9 +47,15 @@
     .btn-secondary { background: #111827; }
     .btn-danger { border-color: #402227; background: #1a0f12; color: #fecaca; }
 
-    .stage { background: rgba(17,24,39,.6); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 18px; }
+    .stage { background: rgba(17,24,39,.6); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 18px; transition: background 0.5s ease; }
+    .stage.round-1 { background: var(--round1-bg); border-color: rgba(59, 130, 246, 0.3); }
+    .stage.round-2 { background: var(--round2-bg); border-color: rgba(239, 68, 68, 0.3); }
+    .stage.round-3 { background: var(--round3-bg); border-color: rgba(34, 197, 94, 0.3); }
+    .stage.round-4 { background: var(--round4-bg); border-color: rgba(168, 85, 247, 0.3); }
+    .stage.final { background: var(--final-bg); border-color: rgba(251, 191, 36, 0.3); }
     .status { display:flex; align-items:center; justify-content:space-between; gap: 8px; margin-bottom: 14px; font-size: 14px; color: var(--muted); }
     .status b { color: var(--text); }
+    .round-title { font-size: clamp(24px, 4vw, 36px); font-weight: 900; text-align: center; margin-bottom: 20px; color: var(--text); text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
     .versus { display:grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
     .card { background: var(--card); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 16px; display:flex; flex-direction:column; gap: 12px; position: relative; min-height: 280px; }
@@ -70,9 +83,35 @@
     .footer code { background:#0b1220; padding:2px 6px; border-radius:6px; border:1px solid #1f2a44; }
 
     .hidden { display: none; }
+    
+    /* 올림픽 단상 스타일 */
+    .podium { display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px; }
+    .podium.show { display: flex; }
+    .podium-title { font-size: clamp(28px, 5vw, 42px); font-weight: 900; color: var(--text); text-shadow: 0 2px 8px rgba(0,0,0,0.7); margin-bottom: 20px; }
+    .podium-container { display: flex; align-items: end; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .podium-place { display: flex; flex-direction: column; align-items: center; position: relative; }
+    .podium-image { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid; margin-bottom: 10px; }
+    .podium-base { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; padding: 15px 20px; position: relative; }
+    .podium-rank { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
+    .podium-name { font-size: 16px; font-weight: 600; text-align: center; }
+    
+    .first-place .podium-image { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+    .first-place .podium-base { background: linear-gradient(145deg, #ffd700, #ffed4a); color: #1a1a1a; height: 100px; }
+    .first-place .podium-rank::before { content: '🥇 '; }
+    
+    .second-place .podium-image { border-color: #c0c0c0; box-shadow: 0 0 15px rgba(192, 192, 192, 0.5); }
+    .second-place .podium-base { background: linear-gradient(145deg, #c0c0c0, #e5e5e5); color: #1a1a1a; height: 80px; }
+    .second-place .podium-rank::before { content: '🥈 '; }
+    
+    .third-place .podium-image { border-color: #cd7f32; box-shadow: 0 0 15px rgba(205, 127, 50, 0.5); }
+    .third-place .podium-base { background: linear-gradient(145deg, #cd7f32, #daa520); color: #1a1a1a; height: 60px; }
+    .third-place .podium-rank::before { content: '🥉 '; }
+    
     @media (max-width: 800px) {
       .versus { grid-template-columns: 1fr; }
       .vs { order: -1; }
+      .podium-container { flex-direction: column; align-items: center; }
+      .podium-place { margin-bottom: 15px; }
     }
   </style>
 </head>
@@ -91,8 +130,9 @@
     </header>
 
     <div class="stage">
+      <div class="round-title" id="roundTitle">-</div>
       <div class="status">
-        <div>라운드: <b id="roundName">-</b> · 매치 <b id="matchIndex">0</b>/<b id="matchTotal">0</b></div>
+        <div>매치 <b id="matchIndex">0</b>/<b id="matchTotal">0</b></div>
         <div>남은 참가자: <b id="remaining">0</b></div>
       </div>
 
@@ -133,6 +173,40 @@
       <div class="footer">
         <div>단축키: <code>L</code>/<code>R</code> 선택, <code>Space</code> 재생/일시정지, <code>Enter</code> 다음</div>
         <div id="winnerBanner"></div>
+      </div>
+    </div>
+    
+    <!-- 올림픽 단상 스타일 순위 표시 -->
+    <div class="podium" id="podium">
+      <div class="podium-title">🏆 새소리 월드컵 결과 🏆</div>
+      <div class="podium-container">
+        <div class="podium-place second-place">
+          <div class="podium-image-container">
+            <div class="image-placeholder" id="secondPlaceImage">🐦</div>
+          </div>
+          <div class="podium-base">
+            <div class="podium-rank">2등</div>
+            <div class="podium-name" id="secondPlaceName">-</div>
+          </div>
+        </div>
+        <div class="podium-place first-place">
+          <div class="podium-image-container">
+            <div class="image-placeholder" id="firstPlaceImage">🐦</div>
+          </div>
+          <div class="podium-base">
+            <div class="podium-rank">1등</div>
+            <div class="podium-name" id="firstPlaceName">-</div>
+          </div>
+        </div>
+        <div class="podium-place third-place">
+          <div class="podium-image-container">
+            <div class="image-placeholder" id="thirdPlaceImage">🐦</div>
+          </div>
+          <div class="podium-base">
+            <div class="podium-rank">3등</div>
+            <div class="podium-name" id="thirdPlaceName">-</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -180,6 +254,15 @@
     const remainingEl = document.getElementById('remaining');
     const bracketEl = document.getElementById('bracket');
     const winnerBanner = document.getElementById('winnerBanner');
+    const roundTitle = document.getElementById('roundTitle');
+    const stage = document.querySelector('.stage');
+    const podium = document.getElementById('podium');
+    const firstPlaceImage = document.getElementById('firstPlaceImage');
+    const secondPlaceImage = document.getElementById('secondPlaceImage');
+    const thirdPlaceImage = document.getElementById('thirdPlaceImage');
+    const firstPlaceName = document.getElementById('firstPlaceName');
+    const secondPlaceName = document.getElementById('secondPlaceName');
+    const thirdPlaceName = document.getElementById('thirdPlaceName');
 
     const chooseLeftBtn = document.getElementById('chooseLeft');
     const chooseRightBtn = document.getElementById('chooseRight');
@@ -198,6 +281,7 @@
       right: null,
       roundNumber: 1,
       history: [], // 각 라운드의 매치 기록
+      rankings: [], // 순위 기록 (3등, 2등, 1등 순)
     };
 
     function shuffle(arr) {
@@ -231,7 +315,25 @@
     function updateStatus() {
       const remaining = state.currentRound.length - state.index * 2;
       const totalMatches = Math.ceil(state.currentRound.length / 2);
-      roundNameEl.textContent = roundLabel(state.roundNumber, state.currentRound.length);
+      const roundName = roundLabel(state.roundNumber, state.currentRound.length);
+      
+      // 라운드 제목 업데이트
+      roundTitle.textContent = roundName;
+      
+      // 라운드별 배경색 적용
+      stage.className = 'stage';
+      if (state.currentRound.length <= 2) {
+        stage.classList.add('final');
+      } else if (state.currentRound.length <= 4) {
+        stage.classList.add('round-4');
+      } else if (state.currentRound.length <= 8) {
+        stage.classList.add('round-3');
+      } else if (state.currentRound.length <= 16) {
+        stage.classList.add('round-2');
+      } else {
+        stage.classList.add('round-1');
+      }
+      
       matchIndexEl.textContent = Math.min(state.index + 1, totalMatches);
       matchTotalEl.textContent = totalMatches;
       remainingEl.textContent = state.currentRound.length;
@@ -286,14 +388,22 @@
     }
 
     function advanceRound() {
+      // 4강에서 결승으로 넘어갈 때 3-4위전 결과 기록
+      if (state.currentRound.length === 4 && state.nextRound.length === 2) {
+        // 4강 탈락자들을 3등으로 기록
+        const losers = state.currentRound.filter(p => !state.nextRound.includes(p));
+        state.rankings.push(...losers);
+      }
+      
       // 우승자만 남겨 다음 라운드 구성
       if (state.nextRound.length === 1) {
-        // 최종 우승
+        // 최종 우승 - 결승 탈락자를 2등으로, 우승자를 1등으로 기록
         const champion = state.nextRound[0];
-        winnerBanner.innerHTML = `🏆 최종 우승: <b>${champion.name}</b>`;
-        state.currentRound = [champion];
-        state.index = 0;
-        updateStatus();
+        const runnerUp = state.currentRound.find(p => p !== champion);
+        if (runnerUp) state.rankings.push(runnerUp); // 2등
+        state.rankings.push(champion); // 1등
+        
+        showPodium();
         return;
       }
       state.currentRound = [...state.nextRound];
@@ -302,6 +412,50 @@
       state.roundNumber++;
       state.history.push([]);
       loadMatch();
+    }
+    
+    function showPodium() {
+      document.querySelector('.stage').style.display = 'none';
+      podium.classList.add('show');
+      
+      // 순위별 표시 (rankings 배열의 마지막 3개가 3등, 2등, 1등)
+      const rankings = state.rankings;
+      const thirdPlace = rankings[rankings.length - 3];
+      const secondPlace = rankings[rankings.length - 2];
+      const firstPlace = rankings[rankings.length - 1];
+      
+      if (thirdPlace) {
+        thirdPlaceName.textContent = thirdPlace.name;
+        loadPodiumImage(thirdPlace, thirdPlaceImage);
+      }
+      if (secondPlace) {
+        secondPlaceName.textContent = secondPlace.name;
+        loadPodiumImage(secondPlace, secondPlaceImage);
+      }
+      if (firstPlace) {
+        firstPlaceName.textContent = firstPlace.name;
+        loadPodiumImage(firstPlace, firstPlaceImage);
+      }
+    }
+    
+    async function loadPodiumImage(bird, container) {
+      try {
+        const response = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(bird.searchTerm)}&per_page=1&client_id=zlALDHYOuXIZiAaOKhrzB0Qp5-gNFwJTKRywbB1JFO0`);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const imageUrl = data.results[0].urls.small;
+          container.innerHTML = `<img src="${imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.className = '';
+        } else {
+          container.innerHTML = '🐦';
+          container.className = 'image-placeholder';
+        }
+      } catch (error) {
+        console.error('이미지 로드 실패:', error);
+        container.innerHTML = '🐦';
+        container.className = 'image-placeholder';
+      }
     }
 
     function choose(side) {
@@ -333,6 +487,12 @@
       state.index = 0;
       state.roundNumber = 1;
       state.history = [[]];
+      state.rankings = [];
+      
+      // UI 초기화
+      document.querySelector('.stage').style.display = 'block';
+      podium.classList.remove('show');
+      
       loadMatch();
     }
 
