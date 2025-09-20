@@ -81,6 +81,9 @@
 
     .footer { margin-top: 12px; color: var(--muted); font-size: 12px; display:flex; justify-content: space-between; gap: 8px; }
     .footer code { background:#0b1220; padding:2px 6px; border-radius:6px; border:1px solid #1f2a44; }
+    .copyright { margin-top: 20px; text-align: center; color: var(--muted); font-size: 11px; border-top: 1px solid #1f2a44; padding-top: 12px; }
+    .copyright a { color: var(--accent); text-decoration: none; }
+    .copyright a:hover { text-decoration: underline; }
 
     .hidden { display: none; }
     
@@ -198,20 +201,20 @@
             <div class="podium-name" id="firstPlaceName">-</div>
           </div>
         </div>
-        <div class="podium-place third-place">
-          <div class="podium-image-container">
-            <div class="image-placeholder" id="thirdPlaceImage">🐦</div>
-          </div>
-          <div class="podium-base">
-            <div class="podium-rank">3등</div>
-            <div class="podium-name" id="thirdPlaceName">-</div>
-          </div>
-        </div>
+      </div>
+      
+      <div class="copyright">
+        © 2024 TheSoundBunker inc. All rights reserved. | 문의: <a href="mailto:play@soundb.kr">play@soundb.kr</a>
       </div>
     </div>
 
     <audio id="leftAudio"></audio>
     <audio id="rightAudio"></audio>
+    <audio id="victoryAudio" preload="auto"></audio>
+    
+    <div class="copyright">
+      © 2024 TheSoundBunker inc. All rights reserved. | 문의: <a href="mailto:play@soundb.kr">play@soundb.kr</a>
+    </div>
   </div>
 
   <script>
@@ -259,10 +262,9 @@
     const podium = document.getElementById('podium');
     const firstPlaceImage = document.getElementById('firstPlaceImage');
     const secondPlaceImage = document.getElementById('secondPlaceImage');
-    const thirdPlaceImage = document.getElementById('thirdPlaceImage');
     const firstPlaceName = document.getElementById('firstPlaceName');
     const secondPlaceName = document.getElementById('secondPlaceName');
-    const thirdPlaceName = document.getElementById('thirdPlaceName');
+    const victoryAudio = document.getElementById('victoryAudio');
 
     const chooseLeftBtn = document.getElementById('chooseLeft');
     const chooseRightBtn = document.getElementById('chooseRight');
@@ -388,13 +390,6 @@
     }
 
     function advanceRound() {
-      // 4강에서 결승으로 넘어갈 때 3-4위전 결과 기록
-      if (state.currentRound.length === 4 && state.nextRound.length === 2) {
-        // 4강 탈락자들을 3등으로 기록
-        const losers = state.currentRound.filter(p => !state.nextRound.includes(p));
-        state.rankings.push(...losers);
-      }
-      
       // 우승자만 남겨 다음 라운드 구성
       if (state.nextRound.length === 1) {
         // 최종 우승 - 결승 탈락자를 2등으로, 우승자를 1등으로 기록
@@ -418,16 +413,14 @@
       document.querySelector('.stage').style.display = 'none';
       podium.classList.add('show');
       
-      // 순위별 표시 (rankings 배열의 마지막 3개가 3등, 2등, 1등)
+      // 승리 효과음 재생
+      playVictorySound();
+      
+      // 1등과 2등만 표시
       const rankings = state.rankings;
-      const thirdPlace = rankings[rankings.length - 3];
       const secondPlace = rankings[rankings.length - 2];
       const firstPlace = rankings[rankings.length - 1];
       
-      if (thirdPlace) {
-        thirdPlaceName.textContent = thirdPlace.name;
-        loadPodiumImage(thirdPlace, thirdPlaceImage);
-      }
       if (secondPlace) {
         secondPlaceName.textContent = secondPlace.name;
         loadPodiumImage(secondPlace, secondPlaceImage);
@@ -601,6 +594,66 @@
       }
     }
 
+    // 승리 효과음 생성 및 재생
+    function createVictorySound() {
+      // Web Audio API를 사용해서 '빠밤!' 효과음 생성
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const duration = 2.0;
+      const sampleRate = audioContext.sampleRate;
+      const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      // 팬파레 사운드 생성 (빠밤 느낌)
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sampleRate;
+        let sound = 0;
+        
+        // 첫 번째 '빠' (0.0-0.3초)
+        if (t < 0.3) {
+          const freq = 523 + Math.sin(t * 50) * 100; // C5 + vibrato
+          sound += Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 8) * 0.5;
+        }
+        // 두 번째 '밤' (0.4-0.8초)
+        else if (t > 0.4 && t < 0.8) {
+          const t2 = t - 0.4;
+          const freq = 659 + Math.sin(t2 * 60) * 120; // E5 + vibrato
+          sound += Math.sin(2 * Math.PI * freq * t2) * Math.exp(-t2 * 6) * 0.6;
+        }
+        // 리버브 효과
+        if (t > 0.8) {
+          const t3 = t - 0.8;
+          sound += sound * 0.1 * Math.exp(-t3 * 3);
+        }
+        
+        data[i] = Math.max(-1, Math.min(1, sound));
+      }
+      
+      return buffer;
+    }
+    
+    function playVictorySound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = createVictorySound();
+        const source = audioContext.createBufferSource();
+        const gainNode = audioContext.createGain();
+        
+        source.buffer = buffer;
+        gainNode.gain.value = 0.3; // 볼륨 조절
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        source.start();
+      } catch (error) {
+        console.log('오디오 재생 실패:', error);
+        // 폴백: 간단한 비프음
+        if (navigator.vibrate) {
+          navigator.vibrate([200, 100, 200, 100, 400]);
+        }
+      }
+    }
+    
     // 시작
     init(DEFAULT_SOUNDS);
   </script>
