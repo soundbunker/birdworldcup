@@ -78,12 +78,11 @@
 
     .vs { display:flex; align-items:center; justify-content:center; font-weight:900; font-size: clamp(20px, 5vw, 28px); color:#cbd5e1; }
 
-    .actions { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    .actions button { font-size: 14px; padding: 14px 8px; min-height: 48px; }
+    .card-button { width: 100%; margin-top: 8px; padding: 12px; font-size: 14px; min-height: 44px; background: linear-gradient(180deg, var(--accent), #1e40af); border: 1px solid var(--accent); color: white; font-weight: 700; }
+    .card-button:hover { background: linear-gradient(180deg, #3b82f6, var(--accent)); border-color: #3b82f6; }
+    .card-button:active { transform: scale(0.98); }
     .next { width: 100%; margin-top: 12px; padding: 14px; font-size: 14px; min-height: 48px; }
 
-    .bracket { margin-top: 12px; display:flex; gap: 4px; flex-wrap: wrap; }
-    .chip { background:#111827; border:1px solid #1f2a44; border-radius: 999px; padding: 4px 8px; font-size: 11px; color:#cbd5e1; }
 
     .footer { margin-top: 12px; color: var(--muted); font-size: 11px; display:flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .footer code { background:#0b1220; padding:2px 6px; border-radius:6px; border:1px solid #1f2a44; }
@@ -94,11 +93,12 @@
     .hidden { display: none; }
     
     /* 올림픽 단상 스타일 */
-    .podium { display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px; }
+    .podium { display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px; position: relative; overflow: hidden; }
     .podium.show { display: flex; }
     .podium-title { font-size: clamp(28px, 5vw, 42px); font-weight: 900; color: var(--text); text-shadow: 0 2px 8px rgba(0,0,0,0.7); margin-bottom: 20px; }
     .podium-container { display: flex; align-items: end; gap: 15px; justify-content: center; flex-wrap: wrap; }
-    .podium-place { display: flex; flex-direction: column; align-items: center; position: relative; }
+    .podium-place { display: flex; flex-direction: column; align-items: center; position: relative; opacity: 0; transform: translateY(50px); transition: all 0.8s ease; }
+    .podium-place.show { opacity: 1; transform: translateY(0); }
     .podium-image { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid; margin-bottom: 10px; }
     .podium-base { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; padding: 15px 20px; position: relative; }
     .podium-rank { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
@@ -111,6 +111,45 @@
     .second-place .podium-image { border-color: #c0c0c0; box-shadow: 0 0 15px rgba(192, 192, 192, 0.5); }
     .second-place .podium-base { background: linear-gradient(145deg, #c0c0c0, #e5e5e5); color: #1a1a1a; height: 80px; }
     .second-place .podium-rank::before { content: '🥈 '; }
+    
+    /* 폭죽 효과 */
+    .fireworks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+    .firework { position: absolute; width: 6px; height: 6px; border-radius: 50%; }
+    
+    @keyframes explode {
+      0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(15) rotate(180deg);
+        opacity: 0;
+      }
+    }
+    
+    @keyframes sparkle {
+      0%, 100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .firework {
+      animation: explode 1.5s ease-out forwards;
+    }
+    
+    .sparkle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #ffd700;
+      border-radius: 50%;
+      animation: sparkle 0.8s ease-in-out infinite;
+    }
     
     .third-place .podium-image { border-color: #cd7f32; box-shadow: 0 0 15px rgba(205, 127, 50, 0.5); }
     .third-place .podium-base { background: linear-gradient(145deg, #cd7f32, #daa520); color: #1a1a1a; height: 60px; }
@@ -126,8 +165,7 @@
       .vs { order: -1; font-size: 24px; padding: 8px 0; }
       .card { min-height: 200px; padding: 10px; }
       .bird-image, .image-placeholder { height: 100px; }
-      .actions { gap: 12px; margin-top: 12px; }
-      .actions button { font-size: 15px; padding: 16px 12px; }
+      .card-button { font-size: 15px; padding: 14px 12px; }
       .next { padding: 16px; font-size: 15px; }
       .stage { padding: 12px; }
       .round-title { margin-bottom: 12px; }
@@ -145,6 +183,7 @@
       .label { font-size: 13px; }
       .sub { font-size: 10px; }
       .vs { font-size: 20px; }
+      .card-button { font-size: 14px; padding: 12px 8px; }
       .podium-title { font-size: 20px; }
     }
   </style>
@@ -174,38 +213,34 @@
         <div class="card" id="leftCard">
           <div id="leftImageContainer" class="image-placeholder">🐦</div>
           <div class="label" id="leftLabel">-</div>
-          <div class="sub" id="leftSub">L 키로 선택</div>
+          <div class="sub" id="leftSub">이 새소리를 들어보세요</div>
           <div class="audio">
-            <button id="leftPlay" aria-label="왼쪽 재생/일시정지">▶︎/⏸</button>
+            <button id="leftPlay" aria-label="재생/일시정지">▶︎/⏸</button>
             <div class="progress" style="flex:1">
               <div class="bar" id="leftBar"></div>
             </div>
           </div>
+          <button class="card-button" id="chooseLeft">이 새를 선택하기</button>
         </div>
         <div class="vs">VS</div>
         <div class="card" id="rightCard">
           <div id="rightImageContainer" class="image-placeholder">🐦</div>
           <div class="label" id="rightLabel">-</div>
-          <div class="sub" id="rightSub">R 키로 선택</div>
+          <div class="sub" id="rightSub">이 새소리를 들어보세요</div>
           <div class="audio">
-            <button id="rightPlay" aria-label="오른쪽 재생/일시정지">▶︎/⏸</button>
+            <button id="rightPlay" aria-label="재생/일시정지">▶︎/⏸</button>
             <div class="progress" style="flex:1">
               <div class="bar" id="rightBar"></div>
             </div>
           </div>
+          <button class="card-button" id="chooseRight">이 새를 선택하기</button>
         </div>
       </div>
 
-      <div class="actions">
-        <button id="chooseLeft" class="btn">⬅ 왼쪽 선택 (L)</button>
-        <button id="chooseRight" class="btn">오른쪽 선택 (R) ➡</button>
-      </div>
-      <button id="nextBtn" class="next btn-secondary">다음 매치 (Enter)</button>
-
-      <div class="bracket" id="bracket"></div>
+      <button id="nextBtn" class="next btn-secondary hidden">다음 매치 (Enter)</button>
 
       <div class="footer">
-        <div>단축키: <code>L</code>/<code>R</code> 선택, <code>Space</code> 재생/일시정지, <code>Enter</code> 다음</div>
+        <div>단축키: <code>L</code>/<code>R</code> 선택, <code>Space</code> 재생/일시정지</div>
         <div id="winnerBanner"></div>
       </div>
     </div>
@@ -213,23 +248,24 @@
     <!-- 올림픽 단상 스타일 순위 표시 -->
     <div class="podium" id="podium">
       <div class="podium-title">🏆 새소리 월드컵 결과 🏆</div>
+      <div class="fireworks" id="fireworks"></div>
       <div class="podium-container">
-        <div class="podium-place second-place">
-          <div class="podium-image-container">
-            <div class="image-placeholder" id="secondPlaceImage">🐦</div>
-          </div>
-          <div class="podium-base">
-            <div class="podium-rank">2등</div>
-            <div class="podium-name" id="secondPlaceName">-</div>
-          </div>
-        </div>
-        <div class="podium-place first-place">
+        <div class="podium-place first-place" id="firstPlaceElement">
           <div class="podium-image-container">
             <div class="image-placeholder" id="firstPlaceImage">🐦</div>
           </div>
           <div class="podium-base">
             <div class="podium-rank">1등</div>
             <div class="podium-name" id="firstPlaceName">-</div>
+          </div>
+        </div>
+        <div class="podium-place second-place" id="secondPlaceElement">
+          <div class="podium-image-container">
+            <div class="image-placeholder" id="secondPlaceImage">🐦</div>
+          </div>
+          <div class="podium-base">
+            <div class="podium-rank">2등</div>
+            <div class="podium-name" id="secondPlaceName">-</div>
           </div>
         </div>
       </div>
@@ -286,7 +322,6 @@
     const matchIndexEl = document.getElementById('matchIndex');
     const matchTotalEl = document.getElementById('matchTotal');
     const remainingEl = document.getElementById('remaining');
-    const bracketEl = document.getElementById('bracket');
     const winnerBanner = document.getElementById('winnerBanner');
     const roundTitle = document.getElementById('roundTitle');
     const stage = document.querySelector('.stage');
@@ -295,6 +330,9 @@
     const secondPlaceImage = document.getElementById('secondPlaceImage');
     const firstPlaceName = document.getElementById('firstPlaceName');
     const secondPlaceName = document.getElementById('secondPlaceName');
+    const firstPlaceElement = document.getElementById('firstPlaceElement');
+    const secondPlaceElement = document.getElementById('secondPlaceElement');
+    const fireworksContainer = document.getElementById('fireworks');
     const victoryAudio = document.getElementById('victoryAudio');
 
     const chooseLeftBtn = document.getElementById('chooseLeft');
@@ -371,13 +409,6 @@
       matchTotalEl.textContent = totalMatches;
       remainingEl.textContent = state.currentRound.length;
 
-      bracketEl.innerHTML = '';
-      state.currentRound.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = 'chip';
-        div.textContent = `${i + 1}. ${p.name}`;
-        bracketEl.appendChild(div);
-      });
     }
 
     function loadMatch() {
@@ -447,19 +478,29 @@
       // 승리 효과음 재생
       playVictorySound();
       
-      // 1등과 2등만 표시
+      // 1등과 2등 데이터 준비
       const rankings = state.rankings;
       const secondPlace = rankings[rankings.length - 2];
       const firstPlace = rankings[rankings.length - 1];
       
-      if (secondPlace) {
-        secondPlaceName.textContent = secondPlace.name;
-        loadPodiumImage(secondPlace, secondPlaceImage);
-      }
-      if (firstPlace) {
-        firstPlaceName.textContent = firstPlace.name;
-        loadPodiumImage(firstPlace, firstPlaceImage);
-      }
+      // 1등 먼저 표시 (1초 후)
+      setTimeout(() => {
+        if (firstPlace) {
+          firstPlaceName.textContent = firstPlace.name;
+          loadPodiumImage(firstPlace, firstPlaceImage);
+          firstPlaceElement.classList.add('show');
+          createFireworks();
+        }
+      }, 1000);
+      
+      // 2등 나중에 표시 (3초 후)
+      setTimeout(() => {
+        if (secondPlace) {
+          secondPlaceName.textContent = secondPlace.name;
+          loadPodiumImage(secondPlace, secondPlaceImage);
+          secondPlaceElement.classList.add('show');
+        }
+      }, 3000);
     }
     
     async function loadPodiumImage(bird, container) {
@@ -500,6 +541,11 @@
       state.history[state.roundNumber - 1].push({ left: state.left.name, right: state.right.name, winner: winner.name });
       if (side === 'left') { leftCard.classList.add('winner'); rightCard.classList.remove('winner'); }
       else { rightCard.classList.add('winner'); leftCard.classList.remove('winner'); }
+      
+      // 선택 후 잠시 대기하고 자동으로 다음 매치로
+      setTimeout(() => {
+        nextMatch();
+      }, 1000);
     }
 
     function nextMatch() {
@@ -692,6 +738,49 @@
         if (navigator.vibrate) {
           navigator.vibrate([200, 100, 200, 100, 400]);
         }
+      }
+    }
+    
+    // 폭죽 효과 생성
+    function createFireworks() {
+      const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+      
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const firework = document.createElement('div');
+          firework.className = 'firework';
+          firework.style.left = Math.random() * 100 + '%';
+          firework.style.top = Math.random() * 100 + '%';
+          firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          
+          fireworksContainer.appendChild(firework);
+          
+          // 폭죽 제거
+          setTimeout(() => {
+            if (firework.parentNode) {
+              firework.parentNode.removeChild(firework);
+            }
+          }, 1500);
+          
+          // 반짝이 효과 추가
+          for (let j = 0; j < 8; j++) {
+            setTimeout(() => {
+              const sparkle = document.createElement('div');
+              sparkle.className = 'sparkle';
+              sparkle.style.left = firework.style.left;
+              sparkle.style.top = firework.style.top;
+              sparkle.style.animationDelay = Math.random() * 0.5 + 's';
+              
+              fireworksContainer.appendChild(sparkle);
+              
+              setTimeout(() => {
+                if (sparkle.parentNode) {
+                  sparkle.parentNode.removeChild(sparkle);
+                }
+              }, 800);
+            }, j * 100);
+          }
+        }, i * 200);
       }
     }
     
