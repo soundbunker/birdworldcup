@@ -91,6 +91,13 @@
     .copyright a:hover { text-decoration: underline; }
     
     .bottom-controls { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #1f2a44; }
+    
+    .bird-status { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0; }
+    .bird-icon { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #374151; transition: all 0.3s ease; position: relative; overflow: hidden; }
+    .bird-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .bird-icon.active { border-color: var(--accent); box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+    .bird-icon.eliminated { opacity: 0.3; border-color: #6b7280; filter: grayscale(1); }
+    .bird-icon.winner { border-color: var(--accent-2); box-shadow: 0 0 12px rgba(52, 211, 153, 0.7); }
 
     .hidden { display: none; }
     
@@ -194,10 +201,8 @@
   <div class="app">
     <header>
       <h1>🕊️ 새소리 이상형월드컵</h1>
-      <div class="toolbar">
-        <label class="btn btn-secondary" title="오디오와 이미지 파일을 선택해 바로 시작">
-          파일 불러오기<input id="fileInput" type="file" accept="audio/*,image/*" multiple class="hidden" />
-        </label>
+      <div class="bird-status" id="birdStatus">
+        <!-- 새들의 상태가 여기에 표시됩니다 -->
       </div>
     </header>
 
@@ -344,7 +349,7 @@
     const nextBtn = document.getElementById('nextBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
     const restartBtn = document.getElementById('restartBtn');
-    const fileInput = document.getElementById('fileInput');
+    const birdStatus = document.getElementById('birdStatus');
 
     let state = {
       participants: [],
@@ -414,7 +419,36 @@
       matchIndexEl.textContent = Math.min(state.index + 1, totalMatches);
       matchTotalEl.textContent = totalMatches;
       remainingEl.textContent = state.currentRound.length;
+      
+      // 새들 상태 업데이트
+      updateBirdStatus();
+    }
 
+    function updateBirdStatus() {
+      const eliminated = state.participants.filter(p => 
+        !state.currentRound.includes(p) && !state.nextRound.includes(p)
+      );
+      
+      birdStatus.innerHTML = state.participants.map(bird => {
+        let className = 'bird-icon';
+        if (state.currentRound.includes(bird)) {
+          className += ' active';
+        } else if (eliminated.includes(bird)) {
+          className += ' eliminated';
+        } else if (state.nextRound.includes(bird)) {
+          className += ' active';
+        }
+        
+        if (state.rankings.includes(bird)) {
+          className += ' winner';
+        }
+        
+        const imageUrl = bird.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8dGV4dCB4PSIzIiB5PSIxNiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5Y2EzYWYiPvCfkKY8L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K';
+        
+        return `<div class="${className}" title="${bird.name}">
+          <img src="${imageUrl}" alt="${bird.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8dGV4dCB4PSIzIiB5PSIxNiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5Y2EzYWYiPvCfkKY8L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K';">
+        </div>`;
+      }).join('');
     }
 
     function loadMatch() {
@@ -600,33 +634,6 @@
     restartBtn.addEventListener('click', () => init(state.participants.length ? state.participants : DEFAULT_SOUNDS));
 
 
-    // 파일 불러오기: 로컬 오디오/이미지 파일을 선택하면 참가자 자동 구성
-    fileInput.addEventListener('change', async (e) => {
-      const files = Array.from(e.target.files);
-      const audioFiles = files.filter(f => f.type.startsWith('audio/'));
-      const imageFiles = files.filter(f => f.type.startsWith('image/'));
-      
-      if (!audioFiles.length) return;
-      
-      // 이미지 파일들을 이름으로 매핑
-      const imageMap = new Map();
-      imageFiles.forEach(f => {
-        const baseName = getBaseName(f.name);
-        imageMap.set(baseName, URL.createObjectURL(f));
-      });
-      
-      const list = audioFiles.map(f => {
-        const baseName = getBaseName(f.name);
-        const imageUrl = imageMap.get(baseName);
-        return { 
-          name: prettyName(f.name), 
-          src: URL.createObjectURL(f),
-          imageUrl: imageUrl
-        };
-      });
-      
-      init(list);
-    });
 
     function prettyName(filename) {
       return filename.replace(/\.[^.]+$/, '') // 확장자 제거
