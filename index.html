@@ -505,34 +505,15 @@
     
     async function loadPodiumImage(bird, container) {
       try {
-        // 로컬 이미지가 있으면 우선 사용
+        // 항상 로컬 images 폴더의 이미지만 사용
         if (bird.imageUrl) {
           container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
           container.className = '';
-          return;
+        } else {
+          // imageUrl이 없으면 placeholder 표시
+          container.innerHTML = '🐦';
+          container.className = 'image-placeholder';
         }
-
-        const birdImageMap = {
-          '큰부리까마귀': '237',
-          '박새': '238', 
-          '곤줄박이': '239',
-          '쇠박새': '240',
-          '굴뚝새': '241',
-          '되지빠귀': '242',
-          '딱새': '243',
-          '노랑할미새': '244',
-          '노랑턱멧새': '245',
-          '검은등뻐꾸기': '246',
-          '뻐꾸기': '247',
-          '꾀꼬리': '248'
-        };
-        
-        const imageId = birdImageMap[bird.name] || '237';
-        const imageUrl = `https://picsum.photos/150/150?random=${imageId}`;
-        
-        container.innerHTML = `<img src="${imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
-        container.className = '';
-        
       } catch (error) {
         console.error('이미지 로드 실패:', error);
         container.innerHTML = '🐦';
@@ -680,7 +661,7 @@
       if (e.key === 'Enter') { e.preventDefault(); nextMatch(); }
     });
 
-    // 새 이미지 로드 함수
+    // 새 이미지 로드 함수 - images 폴더의 사진만 사용
     async function loadBirdImage(bird, container) {
       if (!bird) {
         container.innerHTML = '🐦';
@@ -689,34 +670,15 @@
       }
 
       try {
-        // 로컬 이미지가 있으면 우선 사용
+        // 항상 로컬 images 폴더의 이미지만 사용
         if (bird.imageUrl) {
           container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="bird-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
           container.className = '';
-          return;
+        } else {
+          // imageUrl이 없으면 placeholder 표시
+          container.innerHTML = '🐦';
+          container.className = 'image-placeholder';
         }
-
-        // 기본 이미지 (Picsum Photos - 무료, 저작권 없음)
-        const birdImageMap = {
-          '큰부리까마귀': '237',
-          '박새': '238', 
-          '곤줄박이': '239',
-          '쇠박새': '240',
-          '굴뚝새': '241',
-          '되지빠귀': '242',
-          '딱새': '243',
-          '노랑할미새': '244',
-          '노랑턱멧새': '245',
-          '검은등뻐꾸기': '246',
-          '뻐꾸기': '247',
-          '꾀꼬리': '248'
-        };
-        
-        const imageId = birdImageMap[bird.name] || '237';
-        const imageUrl = `https://picsum.photos/300/200?random=${imageId}`;
-        
-        container.innerHTML = `<img src="${imageUrl}" alt="${bird.name}" class="bird-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
-        container.className = '';
       } catch (error) {
         console.error('이미지 로드 실패:', error);
         container.innerHTML = '🐦';
