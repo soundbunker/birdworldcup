@@ -63,16 +63,16 @@
     .round-title { font-size: clamp(20px, 5vw, 36px); font-weight: 900; text-align: center; margin-bottom: 16px; color: var(--text); text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1.2; }
 
     .versus { display:grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: stretch; }
-    .card { background: var(--card); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 12px; display:flex; flex-direction:column; gap: 8px; position: relative; min-height: 240px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card { background: var(--card); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 12px; display:flex; flex-direction:column; gap: 8px; position: relative; min-height: 320px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .card:active { transform: scale(0.98); }
-    .bird-image { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; background: #1f2937; border: 1px solid #374151; }
-    .image-placeholder { width: 100%; height: 120px; background: linear-gradient(135deg, #1f2937, #374151); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 20px; border: 1px solid #374151; }
+    .bird-image { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #1f2937; border: 1px solid #374151; }
+    .image-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, #1f2937, #374151); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 20px; border: 1px solid #374151; }
     .card.winner { outline: 3px solid var(--accent-2); }
     .label { font-weight: 800; font-size: clamp(14px, 3vw, 18px); line-height: 1.2; text-align: center; }
     .sub { color: var(--muted); font-size: 11px; text-align: center; }
 
     .audio { display:flex; align-items:center; gap: 8px; }
-    .audio button { padding: 10px 12px; min-height: 40px; }
+    .audio button { padding: 10px 12px; min-height: 44px; flex: 1; }
     .progress { height: 6px; background:#111827; border-radius: 999px; overflow: hidden; border: 1px solid #1f2a44; }
     .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #22d3ee); }
 
@@ -161,10 +161,10 @@
       .app { padding: 0; }
       header { flex-direction: column; align-items: stretch; gap: 12px; }
       .toolbar { justify-content: center; }
-      .versus { grid-template-columns: 1fr; gap: 12px; }
-      .vs { order: -1; font-size: 24px; padding: 8px 0; }
+      .versus { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .vs { display: none; }
       .card { min-height: 200px; padding: 10px; }
-      .bird-image, .image-placeholder { height: 100px; }
+      .bird-image, .image-placeholder { height: 120px; }
       .card-button { font-size: 15px; padding: 14px 12px; }
       .next { padding: 16px; font-size: 15px; }
       .stage { padding: 12px; }
@@ -215,12 +215,12 @@
           <div class="label" id="leftLabel">-</div>
           <div class="sub" id="leftSub">이 새소리를 들어보세요</div>
           <div class="audio">
-            <button id="leftPlay" aria-label="재생/일시정지">▶︎/⏸</button>
+            <button id="leftPlay" aria-label="소리듣기">소리듣기</button>
             <div class="progress" style="flex:1">
               <div class="bar" id="leftBar"></div>
             </div>
           </div>
-          <button class="card-button" id="chooseLeft">이 새를 선택하기</button>
+          <button class="card-button" id="chooseLeft">선택</button>
         </div>
         <div class="vs">VS</div>
         <div class="card" id="rightCard">
@@ -228,12 +228,12 @@
           <div class="label" id="rightLabel">-</div>
           <div class="sub" id="rightSub">이 새소리를 들어보세요</div>
           <div class="audio">
-            <button id="rightPlay" aria-label="재생/일시정지">▶︎/⏸</button>
+            <button id="rightPlay" aria-label="소리듣기">소리듣기</button>
             <div class="progress" style="flex:1">
               <div class="bar" id="rightBar"></div>
             </div>
           </div>
-          <button class="card-button" id="chooseRight">이 새를 선택하기</button>
+          <button class="card-button" id="chooseRight">선택</button>
         </div>
       </div>
 
@@ -365,12 +365,15 @@
     }
 
     function roundLabel(n, size) {
-      if (size === 1) return '결승';
-      if (size === 2) return '결승';
-      if (size === 4) return '4강';
-      if (size === 8) return '8강';
-      if (size === 16) return '16강';
-      return `라운드 ${n}`;
+      if (size === 1) return '🏆 우승자 결정!';
+      if (size === 2) return '🔥 결승전';
+      if (size === 3) return '🥉 3강전';
+      if (size === 4) return '🥈 4강전';
+      if (size === 6) return '🎯 6강전';
+      if (size === 8) return '⚡ 8강전';
+      if (size === 12) return '🎪 12강전';
+      if (size === 16) return '🚀 16강전';
+      return `🎵 라운드 ${n} (${size}강)`;
     }
 
     function createPairs(list) {
