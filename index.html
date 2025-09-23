@@ -89,6 +89,8 @@
     .copyright { margin-top: 20px; text-align: center; color: var(--muted); font-size: 11px; border-top: 1px solid #1f2a44; padding-top: 12px; }
     .copyright a { color: var(--accent); text-decoration: none; }
     .copyright a:hover { text-decoration: underline; }
+    
+    .bottom-controls { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #1f2a44; }
 
     .hidden { display: none; }
     
@@ -196,9 +198,6 @@
         <label class="btn btn-secondary" title="오디오와 이미지 파일을 선택해 바로 시작">
           파일 불러오기<input id="fileInput" type="file" accept="audio/*,image/*" multiple class="hidden" />
         </label>
-        <button id="shuffleBtn" class="btn btn-secondary" title="현재 라운드 참가자 섞기">셔플</button>
-        <button id="restartBtn" class="btn btn-secondary" title="처음부터 다시">처음부터</button>
-        <button id="exportBtn" class="btn" title="결과를 JSON으로 저장">결과 내보내기</button>
       </div>
     </header>
 
@@ -215,7 +214,7 @@
           <div class="label" id="leftLabel">-</div>
           <div class="sub" id="leftSub">이 새소리를 들어보세요</div>
           <div class="audio">
-            <button id="leftPlay" aria-label="소리듣기">소리듣기</button>
+            <button id="leftPlay" aria-label="재생">재생</button>
             <div class="progress" style="flex:1">
               <div class="bar" id="leftBar"></div>
             </div>
@@ -228,7 +227,7 @@
           <div class="label" id="rightLabel">-</div>
           <div class="sub" id="rightSub">이 새소리를 들어보세요</div>
           <div class="audio">
-            <button id="rightPlay" aria-label="소리듣기">소리듣기</button>
+            <button id="rightPlay" aria-label="재생">재생</button>
             <div class="progress" style="flex:1">
               <div class="bar" id="rightBar"></div>
             </div>
@@ -242,6 +241,11 @@
       <div class="footer">
         <div>단축키: <code>L</code>/<code>R</code> 선택, <code>Space</code> 재생/일시정지</div>
         <div id="winnerBanner"></div>
+      </div>
+      
+      <div class="bottom-controls">
+        <button id="shuffleBtn" class="btn btn-secondary" title="현재 라운드 참가자 섞기">셔플</button>
+        <button id="restartBtn" class="btn btn-secondary" title="처음부터 다시">처음부터</button>
       </div>
     </div>
     
@@ -340,7 +344,6 @@
     const nextBtn = document.getElementById('nextBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
     const restartBtn = document.getElementById('restartBtn');
-    const exportBtn = document.getElementById('exportBtn');
     const fileInput = document.getElementById('fileInput');
 
     let state = {
@@ -596,17 +599,6 @@
 
     restartBtn.addEventListener('click', () => init(state.participants.length ? state.participants : DEFAULT_SOUNDS));
 
-    exportBtn.addEventListener('click', () => {
-      const data = {
-        rounds: state.history,
-        finalists: state.nextRound.map(p => p.name),
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'birdcup_result.json'; a.click();
-      URL.revokeObjectURL(url);
-    });
 
     // 파일 불러오기: 로컬 오디오/이미지 파일을 선택하면 참가자 자동 구성
     fileInput.addEventListener('change', async (e) => {
