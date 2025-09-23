@@ -193,8 +193,8 @@
     <header>
       <h1>🕊️ 새소리 이상형월드컵</h1>
       <div class="toolbar">
-        <label class="btn btn-secondary" title="오디오 파일 12개를 선택해 바로 시작">
-          파일 불러오기<input id="fileInput" type="file" accept="audio/*" multiple class="hidden" />
+        <label class="btn btn-secondary" title="오디오와 이미지 파일을 선택해 바로 시작">
+          파일 불러오기<input id="fileInput" type="file" accept="audio/*,image/*" multiple class="hidden" />
         </label>
         <button id="shuffleBtn" class="btn btn-secondary" title="현재 라운드 참가자 섞기">셔플</button>
         <button id="restartBtn" class="btn btn-secondary" title="처음부터 다시">처음부터</button>
@@ -289,18 +289,18 @@
     // 1) URL(또는 파일) 없이도 미리보기 되도록 더미 항목을 넣어둡니다.
     // 실제 사용 시 아래 배열을 12개 항목으로 교체하거나, 상단의 "파일 불러오기"로 로컬 파일을 택하세요.
     const DEFAULT_SOUNDS = [
-      { name: "큰부리까마귀", src: "sound/12_큰부리까마귀.mp3", searchTerm: "crow" },
-      { name: "박새", src: "sound/13_박새.mp3", searchTerm: "tit bird" },
-      { name: "곤줄박이", src: "sound/15_곤줄박이.mp3", searchTerm: "marsh tit" },
-      { name: "쇠박새", src: "sound/16_쇠박새.mp3", searchTerm: "coal tit" },
-      { name: "굴뚝새", src: "sound/21_굴뚝새.mp3", searchTerm: "wren" },
-      { name: "되지빠귀", src: "sound/22_되지빠귀.mp3", searchTerm: "thrush" },
-      { name: "딱새", src: "sound/25_딱새.mp3", searchTerm: "robin" },
-      { name: "노랑할미새", src: "sound/27_노랑할미새.mp3", searchTerm: "wagtail" },
-      { name: "노랑턱멧새", src: "sound/30_노랑턱멧새.mp3", searchTerm: "bunting" },
-      { name: "검은등뻐꾸기", src: "sound/4_검은등뻐꾸기.mp3", searchTerm: "cuckoo" },
-      { name: "뻐꾸기", src: "sound/5_뻐꾸기.mp3", searchTerm: "cuckoo" },
-      { name: "꾀꼬리", src: "sound/9_꾀꼬리.mp3", searchTerm: "oriole" },
+      { name: "큰부리까마귀", src: "sound/12_큰부리까마귀.mp3", imageUrl: "images/12_큰부리까마귀.jpg" },
+      { name: "박새", src: "sound/13_박새.mp3", imageUrl: "images/13_박새.jpg" },
+      { name: "곤줄박이", src: "sound/15_곤줄박이.mp3", imageUrl: "images/15_곤줄박이.JPG" },
+      { name: "쇠박새", src: "sound/16_쇠박새.mp3", imageUrl: "images/16_쇠박새.jpg" },
+      { name: "굴뚝새", src: "sound/21_굴뚝새.mp3", imageUrl: "images/21_굴뚝새.png" },
+      { name: "되지빠귀", src: "sound/22_되지빠귀.mp3", imageUrl: "images/22_되지빠귀.jpg" },
+      { name: "딱새", src: "sound/25_딱새.mp3", imageUrl: "images/25_딱새.jpg" },
+      { name: "노랑할미새", src: "sound/27_노랑할미새.mp3", imageUrl: "images/27_노랑할미새.jpg" },
+      { name: "노랑턱멧새", src: "sound/30_노랑턱멧새.mp3", imageUrl: "images/30_노랑턱멧새.jpg" },
+      { name: "검은등뻐꾸기", src: "sound/4_검은등뻐꾸기.mp3", imageUrl: "images/4_검은등뻐꾸기.png" },
+      { name: "뻐꾸기", src: "sound/5_뻐꾸기.mp3", imageUrl: "images/5_뻐꾸기.jpg" },
+      { name: "꾀꼬리", src: "sound/9_꾀꼬리.mp3", imageUrl: "images/9_꾀꼬리.jpg" },
     ];
 
     // ======== 로직 시작 ========
@@ -505,6 +505,13 @@
     
     async function loadPodiumImage(bird, container) {
       try {
+        // 로컬 이미지가 있으면 우선 사용
+        if (bird.imageUrl) {
+          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.className = '';
+          return;
+        }
+
         const birdImageMap = {
           '큰부리까마귀': '237',
           '박새': '238', 
@@ -617,17 +624,46 @@
       URL.revokeObjectURL(url);
     });
 
-    // 파일 불러오기: 로컬 파일을 12개 선택하면 참가자 자동 구성
+    // 파일 불러오기: 로컬 오디오/이미지 파일을 선택하면 참가자 자동 구성
     fileInput.addEventListener('change', async (e) => {
-      const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/'));
-      if (!files.length) return;
-      const list = files.map(f => ({ name: prettyName(f.name), src: URL.createObjectURL(f) }));
+      const files = Array.from(e.target.files);
+      const audioFiles = files.filter(f => f.type.startsWith('audio/'));
+      const imageFiles = files.filter(f => f.type.startsWith('image/'));
+      
+      if (!audioFiles.length) return;
+      
+      // 이미지 파일들을 이름으로 매핑
+      const imageMap = new Map();
+      imageFiles.forEach(f => {
+        const baseName = getBaseName(f.name);
+        imageMap.set(baseName, URL.createObjectURL(f));
+      });
+      
+      const list = audioFiles.map(f => {
+        const baseName = getBaseName(f.name);
+        const imageUrl = imageMap.get(baseName);
+        return { 
+          name: prettyName(f.name), 
+          src: URL.createObjectURL(f),
+          imageUrl: imageUrl
+        };
+      });
+      
       init(list);
     });
 
     function prettyName(filename) {
       return filename.replace(/\.[^.]+$/, '') // 확장자 제거
                      .replace(/[\._-]+/g, ' ') // 구분자 공백화
+                     .trim();
+    }
+
+    function getBaseName(filename) {
+      // 파일 이름에서 숫자나 특수문자를 제거하고 기본 이름만 추출
+      return filename.replace(/\.[^.]+$/, '') // 확장자 제거
+                     .replace(/^\d+[._-]*/, '') // 앞의 숫자 제거
+                     .replace(/[._-]+/g, '') // 구분자 제거
+                     .toLowerCase()
                      .trim();
     }
 
@@ -644,7 +680,7 @@
       if (e.key === 'Enter') { e.preventDefault(); nextMatch(); }
     });
 
-    // 새 이미지 로드 함수 (Unsplash API 사용)
+    // 새 이미지 로드 함수
     async function loadBirdImage(bird, container) {
       if (!bird) {
         container.innerHTML = '🐦';
@@ -653,7 +689,14 @@
       }
 
       try {
-        // 각 새에 따라 다른 이미지 ID 사용 (Picsum Photos - 무료, 저작권 없음)
+        // 로컬 이미지가 있으면 우선 사용
+        if (bird.imageUrl) {
+          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="bird-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.className = '';
+          return;
+        }
+
+        // 기본 이미지 (Picsum Photos - 무료, 저작권 없음)
         const birdImageMap = {
           '큰부리까마귀': '237',
           '박새': '238', 
