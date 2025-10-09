@@ -244,6 +244,39 @@
       .card-button { font-size: 14px; padding: 12px 8px; }
       .podium-title { font-size: 20px; }
     }
+    
+    /* 풀스크린 이미지 모달 */
+    .image-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.9);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .image-modal.show {
+      display: flex;
+    }
+    
+    .image-modal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -340,6 +373,11 @@
     <div class="copyright">
       © 2024 TheSoundBunker inc. All rights reserved. | 문의: <a href="mailto:play@soundb.kr">play@soundb.kr</a>
     </div>
+  </div>
+
+  <!-- 풀스크린 이미지 모달 -->
+  <div class="image-modal" id="imageModal">
+    <img id="modalImage" src="" alt="">
   </div>
 
   <script>
@@ -603,7 +641,7 @@
       try {
         // 항상 로컬 images 폴더의 이미지만 사용
         if (bird.imageUrl) {
-          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';" onclick="openImageModal('${bird.imageUrl}', '${bird.name}')">`;
           container.className = '';
         } else {
           // imageUrl이 없으면 placeholder 표시
@@ -733,7 +771,7 @@
       try {
         // 항상 로컬 images 폴더의 이미지만 사용
         if (bird.imageUrl) {
-          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="bird-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="bird-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';" onclick="openImageModal('${bird.imageUrl}', '${bird.name}')">`;
           container.className = '';
         } else {
           // imageUrl이 없으면 placeholder 표시
@@ -849,6 +887,37 @@
         }, i * 200);
       }
     }
+    
+    // 이미지 모달 기능
+    function openImageModal(imageUrl, birdName) {
+      const modal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+      
+      modalImage.src = imageUrl;
+      modalImage.alt = birdName;
+      modal.classList.add('show');
+      
+      // 모바일에서 스크롤 방지
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImageModal() {
+      const modal = document.getElementById('imageModal');
+      modal.classList.remove('show');
+      
+      // 스크롤 복원
+      document.body.style.overflow = '';
+    }
+    
+    // 모달 클릭 시 닫기
+    document.getElementById('imageModal').addEventListener('click', closeImageModal);
+    
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeImageModal();
+      }
+    });
     
     // 시작
     init(DEFAULT_SOUNDS);
