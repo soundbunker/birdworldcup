@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>새소리 이상형월드컵 | 고창람사르갯벌</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --card: #121826;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #60a5fa;
+      --accent-2: #34d399;
+      --danger: #f87171;
+      --ring: rgba(96,165,250,.45);
+      --radius: 16px;
+      
+      /* 라운드별 배경색 */
+      --round1-bg: rgba(59, 130, 246, 0.15);
+      --round2-bg: rgba(239, 68, 68, 0.15);
+      --round3-bg: rgba(34, 197, 94, 0.15);
+      --round4-bg: rgba(168, 85, 247, 0.15);
+      --final-bg: rgba(251, 191, 36, 0.15);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      background: radial-gradient(1200px 800px at 20% -20%, #1f2937 0%, transparent 60%),
+                  radial-gradient(1000px 700px at 120% 0%, #0f172a 0%, transparent 65%),
+                  var(--bg);
+      color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      padding: 12px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .app { width: 100%; max-width: 1100px; min-height: 100%; }
+    header { display:flex; align-items:center; justify-content:space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: clamp(16px, 4vw, 28px); font-weight: 800; letter-spacing: 0.2px; line-height: 1.2; }
+    .toolbar { display:flex; flex-wrap: wrap; gap: 6px; }
+    button, .btn {
+      background: linear-gradient(180deg, #1f2937, #0b1220);
+      color: var(--text); border: 1px solid #1f2a44; padding: 12px 16px; border-radius: 12px;
+      cursor: pointer; font-weight: 600; transition: .2s ease; font-size: 14px;
+      min-height: 44px; /* 모바일 터치 친화적 */
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation; /* 모바일 터치 최적화 */
+    }
+    button:hover { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+    .btn-secondary { background: #111827; }
+    .btn-danger { border-color: #402227; background: #1a0f12; color: #fecaca; }
+
+    .stage { background: rgba(17,24,39,.6); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 16px; transition: background 0.5s ease; }
+    .stage.round-1 { background: var(--round1-bg); border-color: rgba(59, 130, 246, 0.3); }
+    .stage.round-2 { background: var(--round2-bg); border-color: rgba(239, 68, 68, 0.3); }
+    .stage.round-3 { background: var(--round3-bg); border-color: rgba(34, 197, 94, 0.3); }
+    .stage.round-4 { background: var(--round4-bg); border-color: rgba(168, 85, 247, 0.3); }
+    .stage.final { background: var(--final-bg); border-color: rgba(251, 191, 36, 0.3); }
+    .status { display:flex; align-items:center; justify-content:space-between; gap: 8px; margin-bottom: 12px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+    .status b { color: var(--text); }
+    .round-title { font-size: clamp(20px, 5vw, 36px); font-weight: 900; text-align: center; margin-bottom: 16px; color: var(--text); text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1.2; }
+
+    .versus { display:grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: stretch; }
+    .card { background: var(--card); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 12px; display:flex; flex-direction:column; gap: 8px; position: relative; min-height: 320px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:active { transform: scale(0.98); }
+    .bird-image { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #1f2937; border: 1px solid #374151; }
+    .image-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, #1f2937, #374151); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 20px; border: 1px solid #374151; }
+    .card.winner { outline: 3px solid var(--accent-2); }
+    .label { font-weight: 800; font-size: clamp(14px, 3vw, 18px); line-height: 1.2; text-align: center; }
+    .sub { color: var(--muted); font-size: 11px; text-align: center; }
+
+    .audio { display:flex; align-items:center; gap: 8px; }
+    .audio button { padding: 10px 12px; min-height: 44px; flex: 1; }
+    .progress { height: 6px; background:#111827; border-radius: 999px; overflow: hidden; border: 1px solid #1f2a44; }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #22d3ee); }
+
+    .vs { display:flex; align-items:center; justify-content:center; font-weight:900; font-size: clamp(20px, 5vw, 28px); color:#cbd5e1; }
+
+    .card-button { width: 100%; margin-top: 8px; padding: 12px; font-size: 14px; min-height: 44px; background: linear-gradient(180deg, var(--accent), #1e40af); border: 1px solid var(--accent); color: white; font-weight: 700; }
+    .card-button:hover { background: linear-gradient(180deg, #3b82f6, var(--accent)); border-color: #3b82f6; }
+    .card-button:active { transform: scale(0.98); }
+    .next { width: 100%; margin-top: 12px; padding: 14px; font-size: 14px; min-height: 48px; }
+
+
+    .footer { margin-top: 12px; color: var(--muted); font-size: 11px; display:flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .footer code { background:#0b1220; padding:2px 6px; border-radius:6px; border:1px solid #1f2a44; }
+    .copyright { margin-top: 20px; text-align: center; color: var(--muted); font-size: 11px; border-top: 1px solid #1f2a44; padding-top: 12px; }
+    .copyright a { color: var(--accent); text-decoration: none; }
+    .copyright a:hover { text-decoration: underline; }
+    
+    .bottom-controls { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #1f2a44; }
+    
+    .bird-status { 
+      display: grid; 
+      grid-template-columns: repeat(6, 1fr); 
+      gap: 12px; 
+      justify-content: center; 
+      margin: 16px 0; 
+      max-width: 360px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .bird-icon { 
+      width: 50px; 
+      height: 50px; 
+      border-radius: 50%; 
+      border: 2px solid #374151; 
+      transition: all 0.3s ease; 
+      position: relative; 
+      overflow: hidden;
+      opacity: 1;
+      transform: scale(1);
+    }
+    .bird-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .bird-icon.active { border-color: var(--accent); box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+    .bird-icon.eliminated { 
+      opacity: 0;
+      transform: scale(0);
+      pointer-events: none;
+    }
+    .bird-icon.winner { border-color: var(--accent-2); box-shadow: 0 0 12px rgba(52, 211, 153, 0.7); }
+
+    .hidden { display: none; }
+    
+    /* 올림픽 단상 스타일 */
+    .podium { display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px; position: relative; overflow: hidden; }
+    .podium.show { display: flex; }
+    .podium-title { font-size: clamp(28px, 5vw, 42px); font-weight: 900; color: var(--text); text-shadow: 0 2px 8px rgba(0,0,0,0.7); margin-bottom: 20px; }
+    .podium-container { display: flex; align-items: end; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .podium-place { display: flex; flex-direction: column; align-items: center; position: relative; opacity: 0; transform: translateY(50px); transition: all 0.8s ease; }
+    .podium-place.show { opacity: 1; transform: translateY(0); }
+    .podium-image { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid; margin-bottom: 10px; }
+    .podium-base { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; padding: 15px 20px; position: relative; }
+    .podium-rank { font-size: 24px; font-weight: 900; margin-bottom: 5px; }
+    .podium-name { font-size: 16px; font-weight: 600; text-align: center; }
+    
+    .first-place .podium-image { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+    .first-place .podium-base { background: linear-gradient(145deg, #ffd700, #ffed4a); color: #1a1a1a; height: 100px; }
+    .first-place .podium-rank::before { content: '🥇 '; }
+    
+    .second-place .podium-image { border-color: #c0c0c0; box-shadow: 0 0 15px rgba(192, 192, 192, 0.5); }
+    .second-place .podium-base { background: linear-gradient(145deg, #c0c0c0, #e5e5e5); color: #1a1a1a; height: 80px; }
+    .second-place .podium-rank::before { content: '🥈 '; }
+    
+    /* 폭죽 효과 */
+    .fireworks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+    .firework { position: absolute; width: 6px; height: 6px; border-radius: 50%; }
+    
+    @keyframes explode {
+      0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(15) rotate(180deg);
+        opacity: 0;
+      }
+    }
+    
+    @keyframes sparkle {
+      0%, 100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .firework {
+      animation: explode 1.5s ease-out forwards;
+    }
+    
+    .sparkle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #ffd700;
+      border-radius: 50%;
+      animation: sparkle 0.8s ease-in-out infinite;
+    }
+    
+    .third-place .podium-image { border-color: #cd7f32; box-shadow: 0 0 15px rgba(205, 127, 50, 0.5); }
+    .third-place .podium-base { background: linear-gradient(145deg, #cd7f32, #daa520); color: #1a1a1a; height: 60px; }
+    .third-place .podium-rank::before { content: '🥉 '; }
+    
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {
+      body { padding: 8px; }
+      .app { padding: 0; }
+      header { flex-direction: column; align-items: stretch; gap: 12px; }
+      .toolbar { justify-content: center; }
+      .versus { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .vs { display: none; }
+      .card { min-height: 200px; padding: 10px; }
+      .bird-image, .image-placeholder { height: 120px; }
+      .card-button { font-size: 15px; padding: 14px 12px; }
+      .next { padding: 16px; font-size: 15px; }
+      .stage { padding: 12px; }
+      .round-title { margin-bottom: 12px; }
+      .podium-container { flex-direction: column; align-items: center; gap: 20px; }
+      .podium-place { margin-bottom: 0; }
+      .podium-image { width: 100px; height: 100px; }
+      .copyright { font-size: 10px; padding-top: 8px; }
+    }
+    
+    @media (max-width: 480px) {
+      .toolbar { flex-direction: column; }
+      .toolbar button, .toolbar .btn { width: 100%; }
+      .card { min-height: 180px; }
+      .bird-image, .image-placeholder { height: 80px; font-size: 18px; }
+      .label { font-size: 13px; }
+      .sub { font-size: 10px; }
+      .vs { font-size: 20px; }
+      .card-button { font-size: 14px; padding: 12px 8px; }
+      .podium-title { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🕊️ 새소리 이상형월드컵 | 고창람사르갯벌</h1>
+      <div class="bird-status" id="birdStatus">
+        <!-- 새들의 상태가 여기에 표시됩니다 -->
+      </div>
+    </header>
+
+    <div class="stage">
+      <div class="round-title" id="roundTitle">-</div>
+      <div class="status">
+        <div>매치 <b id="matchIndex">0</b>/<b id="matchTotal">0</b></div>
+        <div>남은 참가자: <b id="remaining">0</b></div>
+      </div>
+
+      <div class="versus">
+        <div class="card" id="leftCard">
+          <div id="leftImageContainer" class="image-placeholder">🐦</div>
+          <div class="label" id="leftLabel">-</div>
+          <div class="sub" id="leftSub">이 새소리를 들어보세요</div>
+          <div class="audio">
+            <button id="leftPlay" aria-label="재생">재생</button>
+            <div class="progress" style="flex:1">
+              <div class="bar" id="leftBar"></div>
+            </div>
+          </div>
+          <button class="card-button" id="chooseLeft">선택</button>
+        </div>
+        <div class="vs">VS</div>
+        <div class="card" id="rightCard">
+          <div id="rightImageContainer" class="image-placeholder">🐦</div>
+          <div class="label" id="rightLabel">-</div>
+          <div class="sub" id="rightSub">이 새소리를 들어보세요</div>
+          <div class="audio">
+            <button id="rightPlay" aria-label="재생">재생</button>
+            <div class="progress" style="flex:1">
+              <div class="bar" id="rightBar"></div>
+            </div>
+          </div>
+          <button class="card-button" id="chooseRight">선택</button>
+        </div>
+      </div>
+
+      <button id="nextBtn" class="next btn-secondary hidden">다음 매치 (Enter)</button>
+
+      <div class="footer">
+        <div>단축키: <code>L</code>/<code>R</code> 선택, <code>Space</code> 재생/일시정지</div>
+        <div id="winnerBanner"></div>
+      </div>
+      
+      <div class="bottom-controls">
+        <button id="shuffleBtn" class="btn btn-secondary" title="현재 라운드 참가자 섞기">셔플</button>
+        <button id="restartBtn" class="btn btn-secondary" title="처음부터 다시">처음부터</button>
+      </div>
+    </div>
+    
+    <!-- 올림픽 단상 스타일 순위 표시 -->
+    <div class="podium" id="podium">
+      <div class="podium-title">🏆 새소리 월드컵 결과 🏆</div>
+      <div class="fireworks" id="fireworks"></div>
+      <div class="podium-container">
+        <div class="podium-place first-place" id="firstPlaceElement">
+          <div class="podium-image-container">
+            <div class="image-placeholder" id="firstPlaceImage">🐦</div>
+          </div>
+          <div class="podium-base">
+            <div class="podium-rank">1등</div>
+            <div class="podium-name" id="firstPlaceName">-</div>
+          </div>
+        </div>
+        <div class="podium-place second-place" id="secondPlaceElement">
+          <div class="podium-image-container">
+            <div class="image-placeholder" id="secondPlaceImage">🐦</div>
+          </div>
+          <div class="podium-base">
+            <div class="podium-rank">2등</div>
+            <div class="podium-name" id="secondPlaceName">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="copyright">
+        © 2024 TheSoundBunker inc. All rights reserved. | 문의: <a href="mailto:play@soundb.kr">play@soundb.kr</a>
+      </div>
+    </div>
+
+    <audio id="leftAudio"></audio>
+    <audio id="rightAudio"></audio>
+    <audio id="victoryAudio" preload="auto"></audio>
+    
+    <div class="copyright">
+      © 2024 TheSoundBunker inc. All rights reserved. | 문의: <a href="mailto:play@soundb.kr">play@soundb.kr</a>
+    </div>
+  </div>
+
+  <script>
+    // ======== 설정(수정 가능) ========
+    // 1) URL(또는 파일) 없이도 미리보기 되도록 더미 항목을 넣어둡니다.
+    // 실제 사용 시 아래 배열을 12개 항목으로 교체하거나, 상단의 "파일 불러오기"로 로컬 파일을 택하세요.
+    const DEFAULT_SOUNDS = [
+      { name: "큰부리까마귀", src: "sound/12_큰부리까마귀.mp3", imageUrl: "images/12_큰부리까마귀.jpg" },
+      { name: "박새", src: "sound/13_박새.mp3", imageUrl: "images/13_박새.jpg" },
+      { name: "곤줄박이", src: "sound/15_곤줄박이.mp3", imageUrl: "images/15_곤줄박이.JPG" },
+      { name: "쏙독새", src: "sound/1_쏙독새.mp3", imageUrl: "images/1_쏙독새.jpg" },
+      { name: "굴뚝새", src: "sound/21_굴뚝새.mp3", imageUrl: "images/21_굴뚝새.png" },
+      { name: "되지빠귀", src: "sound/22_되지빠귀.mp3", imageUrl: "images/22_되지빠귀.jpg" },
+      { name: "딱새", src: "sound/25_딱새.mp3", imageUrl: "images/25_딱새.jpg" },
+      { name: "노랑할미새", src: "sound/27_노랑할미새.mp3", imageUrl: "images/27_노랑할미새.jpg" },
+      { name: "노랑턱멧새", src: "sound/30_노랑턱멧새.mp3", imageUrl: "images/30_노랑턱멧새.jpg" },
+      { name: "검은등뻐꾸기", src: "sound/4_검은등뻐꾸기.mp3", imageUrl: "images/4_검은등뻐꾸기.png" },
+      { name: "뻐꾸기", src: "sound/5_뻐꾸기.mp3", imageUrl: "images/5_뻐꾸기.jpg" },
+      { name: "꾀꼬리", src: "sound/9_꾀꼬리.mp3", imageUrl: "images/9_꾀꼬리.jpg" },
+    ];
+
+    // ======== 로직 시작 ========
+    const leftAudio = document.getElementById('leftAudio');
+    const rightAudio = document.getElementById('rightAudio');
+    const leftPlay = document.getElementById('leftPlay');
+    const rightPlay = document.getElementById('rightPlay');
+    const leftBar = document.getElementById('leftBar');
+    const rightBar = document.getElementById('rightBar');
+
+    const leftLabel = document.getElementById('leftLabel');
+    const rightLabel = document.getElementById('rightLabel');
+    const leftCard = document.getElementById('leftCard');
+    const rightCard = document.getElementById('rightCard');
+    const leftImageContainer = document.getElementById('leftImageContainer');
+    const rightImageContainer = document.getElementById('rightImageContainer');
+
+    const roundNameEl = document.getElementById('roundName');
+    const matchIndexEl = document.getElementById('matchIndex');
+    const matchTotalEl = document.getElementById('matchTotal');
+    const remainingEl = document.getElementById('remaining');
+    const winnerBanner = document.getElementById('winnerBanner');
+    const roundTitle = document.getElementById('roundTitle');
+    const stage = document.querySelector('.stage');
+    const podium = document.getElementById('podium');
+    const firstPlaceImage = document.getElementById('firstPlaceImage');
+    const secondPlaceImage = document.getElementById('secondPlaceImage');
+    const firstPlaceName = document.getElementById('firstPlaceName');
+    const secondPlaceName = document.getElementById('secondPlaceName');
+    const firstPlaceElement = document.getElementById('firstPlaceElement');
+    const secondPlaceElement = document.getElementById('secondPlaceElement');
+    const fireworksContainer = document.getElementById('fireworks');
+    const victoryAudio = document.getElementById('victoryAudio');
+
+    const chooseLeftBtn = document.getElementById('chooseLeft');
+    const chooseRightBtn = document.getElementById('chooseRight');
+    const nextBtn = document.getElementById('nextBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const birdStatus = document.getElementById('birdStatus');
+
+    let state = {
+      participants: [],
+      currentRound: [],
+      nextRound: [],
+      index: 0,
+      left: null,
+      right: null,
+      roundNumber: 1,
+      history: [], // 각 라운드의 매치 기록
+      rankings: [], // 순위 기록 (3등, 2등, 1등 순)
+    };
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function roundLabel(n, size) {
+      if (size === 1) return '🏆 우승자 결정!';
+      if (size === 2) return '🔥 결승전';
+      if (size === 3) return '🥉 3강전';
+      if (size === 4) return '🥈 4강전';
+      if (size === 6) return '🎯 6강전';
+      if (size === 8) return '⚡ 8강전';
+      if (size === 12) return '🎪 12강전';
+      if (size === 16) return '🚀 16강전';
+      return `🎵 라운드 ${n} (${size}강)`;
+    }
+
+    function createPairs(list) {
+      // 홀수면 마지막 하나는 부전승(byes)
+      const pairs = [];
+      for (let i = 0; i < list.length - 1; i += 2) {
+        pairs.push([list[i], list[i + 1]]);
+      }
+      const bye = list.length % 2 === 1 ? list[list.length - 1] : null;
+      return { pairs, bye };
+    }
+
+    function updateStatus() {
+      const remaining = state.currentRound.length - state.index * 2;
+      const totalMatches = Math.ceil(state.currentRound.length / 2);
+      const roundName = roundLabel(state.roundNumber, state.currentRound.length);
+      
+      // 라운드 제목 업데이트
+      roundTitle.textContent = roundName;
+      
+      // 라운드별 배경색 적용
+      stage.className = 'stage';
+      if (state.currentRound.length <= 2) {
+        stage.classList.add('final');
+      } else if (state.currentRound.length <= 4) {
+        stage.classList.add('round-4');
+      } else if (state.currentRound.length <= 8) {
+        stage.classList.add('round-3');
+      } else if (state.currentRound.length <= 16) {
+        stage.classList.add('round-2');
+      } else {
+        stage.classList.add('round-1');
+      }
+      
+      matchIndexEl.textContent = Math.min(state.index + 1, totalMatches);
+      matchTotalEl.textContent = totalMatches;
+      remainingEl.textContent = state.currentRound.length;
+      
+      // 새들 상태 업데이트
+      updateBirdStatus();
+    }
+
+    function updateBirdStatus() {
+      // 살아남은 새들만 표시 (현재 라운드 + 다음 라운드 + 순위권)
+      const survivingBirds = [
+        ...state.currentRound,
+        ...state.nextRound,
+        ...state.rankings
+      ].filter((bird, index, array) => 
+        array.findIndex(b => b.name === bird.name) === index // 중복 제거
+      );
+      
+      birdStatus.innerHTML = state.participants.map(bird => {
+        let className = 'bird-icon';
+        
+        // 살아남지 못한 새는 eliminated 클래스 추가
+        if (!survivingBirds.includes(bird)) {
+          className += ' eliminated';
+        } else if (state.currentRound.includes(bird)) {
+          className += ' active';
+        } else if (state.nextRound.includes(bird)) {
+          className += ' active';
+        }
+        
+        if (state.rankings.includes(bird)) {
+          className += ' winner';
+        }
+        
+        const imageUrl = bird.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8dGV4dCB4PSIzIiB5PSIxNiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5Y2EzYWYiPvCfkKY8L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K';
+        
+        return `<div class="${className}" title="${bird.name}">
+          <img src="${imageUrl}" alt="${bird.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8dGV4dCB4PSIzIiB5PSIxNiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5Y2EzYWYiPvCfkKY8L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K';">
+        </div>`;
+      }).join('');
+    }
+
+    function loadMatch() {
+      const i = state.index * 2;
+      state.left = state.currentRound[i] || null;
+      state.right = state.currentRound[i + 1] || null;
+
+      leftCard.classList.remove('winner');
+      rightCard.classList.remove('winner');
+
+      if (!state.left && !state.right) {
+        // 라운드 종료 → 다음 라운드로
+        advanceRound();
+        return;
+      }
+
+      if (state.left && !state.right) {
+        // 부전승 처리
+        state.nextRound.push(state.left);
+        state.history[state.roundNumber - 1].push({ left: state.left.name, right: null, winner: state.left.name });
+        state.index++;
+        loadMatch();
+        return;
+      }
+
+      leftLabel.textContent = state.left?.name ?? '-';
+      rightLabel.textContent = state.right?.name ?? '-';
+
+      leftAudio.src = state.left?.src || '';
+      rightAudio.src = state.right?.src || '';
+      leftAudio.pause(); rightAudio.pause();
+      leftAudio.currentTime = 0; rightAudio.currentTime = 0;
+      leftBar.style.width = '0%'; rightBar.style.width = '0%';
+
+      // 새 이미지 로드
+      loadBirdImage(state.left, leftImageContainer);
+      loadBirdImage(state.right, rightImageContainer);
+
+      updateStatus();
+      winnerBanner.textContent = '';
+    }
+
+    function advanceRound() {
+      // 우승자만 남겨 다음 라운드 구성
+      if (state.nextRound.length === 1) {
+        // 최종 우승 - 결승 탈락자를 2등으로, 우승자를 1등으로 기록
+        const champion = state.nextRound[0];
+        const runnerUp = state.currentRound.find(p => p !== champion);
+        if (runnerUp) state.rankings.push(runnerUp); // 2등
+        state.rankings.push(champion); // 1등
+        
+        showPodium();
+        return;
+      }
+      state.currentRound = [...state.nextRound];
+      state.nextRound = [];
+      state.index = 0;
+      state.roundNumber++;
+      state.history.push([]);
+      loadMatch();
+    }
+    
+    function showPodium() {
+      document.querySelector('.stage').style.display = 'none';
+      podium.classList.add('show');
+      
+      // 승리 효과음 재생
+      playVictorySound();
+      
+      // 1등과 2등 데이터 준비
+      const rankings = state.rankings;
+      const secondPlace = rankings[rankings.length - 2];
+      const firstPlace = rankings[rankings.length - 1];
+      
+      // 1등 먼저 표시 (1초 후)
+      setTimeout(() => {
+        if (firstPlace) {
+          firstPlaceName.textContent = firstPlace.name;
+          loadPodiumImage(firstPlace, firstPlaceImage);
+          firstPlaceElement.classList.add('show');
+          createFireworks();
+        }
+      }, 1000);
+      
+      // 2등 나중에 표시 (3초 후)
+      setTimeout(() => {
+        if (secondPlace) {
+          secondPlaceName.textContent = secondPlace.name;
+          loadPodiumImage(secondPlace, secondPlaceImage);
+          secondPlaceElement.classList.add('show');
+        }
+      }, 3000);
+    }
+    
+    async function loadPodiumImage(bird, container) {
+      try {
+        // 항상 로컬 images 폴더의 이미지만 사용
+        if (bird.imageUrl) {
+          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="podium-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.className = '';
+        } else {
+          // imageUrl이 없으면 placeholder 표시
+          container.innerHTML = '🐦';
+          container.className = 'image-placeholder';
+        }
+      } catch (error) {
+        console.error('이미지 로드 실패:', error);
+        container.innerHTML = '🐦';
+        container.className = 'image-placeholder';
+      }
+    }
+
+    function choose(side) {
+      if (!state.left || !state.right) return;
+      const winner = side === 'left' ? state.left : state.right;
+      const loser = side === 'left' ? state.right : state.left;
+      state.nextRound.push(winner);
+      state.history[state.roundNumber - 1].push({ left: state.left.name, right: state.right.name, winner: winner.name });
+      if (side === 'left') { leftCard.classList.add('winner'); rightCard.classList.remove('winner'); }
+      else { rightCard.classList.add('winner'); leftCard.classList.remove('winner'); }
+      
+      // 상태 즉시 업데이트
+      updateBirdStatus();
+      
+      // 선택 후 잠시 대기하고 자동으로 다음 매치로
+      setTimeout(() => {
+        nextMatch();
+      }, 1000);
+    }
+
+    function nextMatch() {
+      if (!state.left && !state.right) return;
+      // 선택 없이 넘기면 부전승 처리(왼쪽)
+      if (state.left && state.right && !leftCard.classList.contains('winner') && !rightCard.classList.contains('winner')) {
+        choose('left');
+      }
+      state.index++;
+      loadMatch();
+    }
+
+    function init(participants) {
+      // 12개 등 임의 참가자 수를 지원. 무작위 섞기
+      const list = shuffle(participants);
+      state.participants = list;
+      state.currentRound = [...list];
+      state.nextRound = [];
+      state.index = 0;
+      state.roundNumber = 1;
+      state.history = [[]];
+      state.rankings = [];
+      
+      // UI 초기화
+      document.querySelector('.stage').style.display = 'block';
+      podium.classList.remove('show');
+      
+      loadMatch();
+    }
+
+    // 진행 바 업데이트
+    leftAudio.addEventListener('timeupdate', () => {
+      if (leftAudio.duration) leftBar.style.width = `${(leftAudio.currentTime / leftAudio.duration) * 100}%`;
+    });
+    rightAudio.addEventListener('timeupdate', () => {
+      if (rightAudio.duration) rightBar.style.width = `${(rightAudio.currentTime / rightAudio.duration) * 100}%`;
+    });
+
+    function toggle(audio, other) {
+      if (!audio.src) return;
+      if (other && !other.paused) other.pause();
+      if (audio.paused) audio.play(); else audio.pause();
+    }
+
+    leftPlay.addEventListener('click', () => toggle(leftAudio, rightAudio));
+    rightPlay.addEventListener('click', () => toggle(rightAudio, leftAudio));
+
+    chooseLeftBtn.addEventListener('click', () => choose('left'));
+    chooseRightBtn.addEventListener('click', () => choose('right'));
+    nextBtn.addEventListener('click', nextMatch);
+
+    shuffleBtn.addEventListener('click', () => {
+      state.currentRound = shuffle(state.currentRound);
+      state.index = 0; state.nextRound = []; state.history[state.roundNumber - 1] = [];
+      loadMatch();
+    });
+
+    restartBtn.addEventListener('click', () => init(state.participants.length ? state.participants : DEFAULT_SOUNDS));
+
+
+
+    function prettyName(filename) {
+      return filename.replace(/\.[^.]+$/, '') // 확장자 제거
+                     .replace(/[\._-]+/g, ' ') // 구분자 공백화
+                     .trim();
+    }
+
+    function getBaseName(filename) {
+      // 파일 이름에서 숫자나 특수문자를 제거하고 기본 이름만 추출
+      return filename.replace(/\.[^.]+$/, '') // 확장자 제거
+                     .replace(/^\d+[._-]*/, '') // 앞의 숫자 제거
+                     .replace(/[._-]+/g, '') // 구분자 제거
+                     .toLowerCase()
+                     .trim();
+    }
+
+    // 키보드 단축키
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.key.toLowerCase() === 'l') { e.preventDefault(); choose('left'); }
+      if (e.key.toLowerCase() === 'r') { e.preventDefault(); choose('right'); }
+      if (e.key === ' ') { e.preventDefault();
+        // 최근에 눌렀던 쪽 토글: 우선 오른쪽이 재생 중이면 오른쪽, 아니면 왼쪽
+        if (!rightAudio.paused || (leftAudio.paused && rightAudio.paused)) toggle(leftAudio, rightAudio);
+        else toggle(rightAudio, leftAudio);
+      }
+      if (e.key === 'Enter') { e.preventDefault(); nextMatch(); }
+    });
+
+    // 새 이미지 로드 함수 - images 폴더의 사진만 사용
+    async function loadBirdImage(bird, container) {
+      if (!bird) {
+        container.innerHTML = '🐦';
+        container.className = 'image-placeholder';
+        return;
+      }
+
+      try {
+        // 항상 로컬 images 폴더의 이미지만 사용
+        if (bird.imageUrl) {
+          container.innerHTML = `<img src="${bird.imageUrl}" alt="${bird.name}" class="bird-image" onerror="this.parentElement.innerHTML='🐦'; this.parentElement.className='image-placeholder';">`;
+          container.className = '';
+        } else {
+          // imageUrl이 없으면 placeholder 표시
+          container.innerHTML = '🐦';
+          container.className = 'image-placeholder';
+        }
+      } catch (error) {
+        console.error('이미지 로드 실패:', error);
+        container.innerHTML = '🐦';
+        container.className = 'image-placeholder';
+      }
+    }
+
+    // 승리 효과음 생성 및 재생
+    function createVictorySound() {
+      // Web Audio API를 사용해서 '빠밤!' 효과음 생성
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const duration = 2.0;
+      const sampleRate = audioContext.sampleRate;
+      const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      // 팬파레 사운드 생성 (빠밤 느낌)
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sampleRate;
+        let sound = 0;
+        
+        // 첫 번째 '빠' (0.0-0.3초)
+        if (t < 0.3) {
+          const freq = 523 + Math.sin(t * 50) * 100; // C5 + vibrato
+          sound += Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 8) * 0.5;
+        }
+        // 두 번째 '밤' (0.4-0.8초)
+        else if (t > 0.4 && t < 0.8) {
+          const t2 = t - 0.4;
+          const freq = 659 + Math.sin(t2 * 60) * 120; // E5 + vibrato
+          sound += Math.sin(2 * Math.PI * freq * t2) * Math.exp(-t2 * 6) * 0.6;
+        }
+        // 리버브 효과
+        if (t > 0.8) {
+          const t3 = t - 0.8;
+          sound += sound * 0.1 * Math.exp(-t3 * 3);
+        }
+        
+        data[i] = Math.max(-1, Math.min(1, sound));
+      }
+      
+      return buffer;
+    }
+    
+    function playVictorySound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = createVictorySound();
+        const source = audioContext.createBufferSource();
+        const gainNode = audioContext.createGain();
+        
+        source.buffer = buffer;
+        gainNode.gain.value = 0.3; // 볼륨 조절
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        source.start();
+      } catch (error) {
+        console.log('오디오 재생 실패:', error);
+        // 폴백: 간단한 비프음
+        if (navigator.vibrate) {
+          navigator.vibrate([200, 100, 200, 100, 400]);
+        }
+      }
+    }
+    
+    // 폭죽 효과 생성
+    function createFireworks() {
+      const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+      
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const firework = document.createElement('div');
+          firework.className = 'firework';
+          firework.style.left = Math.random() * 100 + '%';
+          firework.style.top = Math.random() * 100 + '%';
+          firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          
+          fireworksContainer.appendChild(firework);
+          
+          // 폭죽 제거
+          setTimeout(() => {
+            if (firework.parentNode) {
+              firework.parentNode.removeChild(firework);
+            }
+          }, 1500);
+          
+          // 반짝이 효과 추가
+          for (let j = 0; j < 8; j++) {
+            setTimeout(() => {
+              const sparkle = document.createElement('div');
+              sparkle.className = 'sparkle';
+              sparkle.style.left = firework.style.left;
+              sparkle.style.top = firework.style.top;
+              sparkle.style.animationDelay = Math.random() * 0.5 + 's';
+              
+              fireworksContainer.appendChild(sparkle);
+              
+              setTimeout(() => {
+                if (sparkle.parentNode) {
+                  sparkle.parentNode.removeChild(sparkle);
+                }
+              }, 800);
+            }, j * 100);
+          }
+        }, i * 200);
+      }
+    }
+    
+    // 시작
+    init(DEFAULT_SOUNDS);
+  </script>
+</body>
+</html>
