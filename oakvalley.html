@@ -23,7 +23,7 @@
       --round4-bg: rgba(168, 85, 247, 0.15);
       --final-bg: rgba(251, 191, 36, 0.15);
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; }
     body {
       margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
@@ -646,6 +646,7 @@
       else { rightCard.classList.add('winner'); leftCard.classList.remove('winner'); }
 
       updateBirdStatus();
+      pushGameState();
 
       setTimeout(() => {
         nextMatch();
@@ -876,6 +877,27 @@
         closeImageModal();
       }
     });
+
+    // 뒤로가기 처리 - 브라우저 뒤로가기 시 다른 페이지로 이동 방지
+    function pushGameState() {
+      history.pushState({ game: true, round: state.roundNumber, index: state.index }, '');
+    }
+
+    window.addEventListener('popstate', function(e) {
+      // 게임 중이면 뒤로가기를 게임 리셋으로 처리
+      if (e.state && e.state.game) {
+        // 이전 상태가 있으면 무시하고 현재 상태 유지
+        pushGameState();
+      } else {
+        // 초기 상태로 돌아온 경우 다시 pushState해서 페이지 이탈 방지
+        pushGameState();
+        // 게임을 처음부터 다시 시작
+        init(state.participants.length ? state.participants : DEFAULT_SOUNDS);
+      }
+    });
+
+    // 초기 히스토리 상태 설정
+    history.replaceState({ game: true, round: 0, index: 0 }, '');
 
     // 시작
     init(DEFAULT_SOUNDS);
