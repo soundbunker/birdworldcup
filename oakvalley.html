@@ -52,6 +52,7 @@
     }
     button:hover { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
     .btn-secondary { background: #111827; }
+    button:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 
     .stage { background: rgba(17,24,39,.6); border: 1px solid #1f2a44; border-radius: var(--radius); padding: 16px; transition: background 0.5s ease; }
     .stage.round-1 { background: var(--round1-bg); border-color: rgba(59, 130, 246, 0.3); }
@@ -328,6 +329,7 @@
       </div>
 
       <div class="bottom-controls">
+        <button id="undoBtn" class="btn btn-secondary" title="이전 선택 되돌리기" disabled>↩ 이전선택</button>
         <button id="shuffleBtn" class="btn btn-secondary" title="현재 라운드 참가자 섞기">셔플</button>
         <button id="restartBtn" class="btn btn-secondary" title="처음부터 다시">처음부터</button>
       </div>
@@ -421,6 +423,7 @@
     const firstPlaceElement = document.getElementById('firstPlaceElement');
     const secondPlaceElement = document.getElementById('secondPlaceElement');
     const fireworksContainer = document.getElementById('fireworks');
+    const undoBtn = document.getElementById('undoBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
     const restartBtn = document.getElementById('restartBtn');
     const podiumRestart = document.getElementById('podiumRestart');
@@ -841,6 +844,21 @@
     // 뒤로가기 처리 - 선택 되돌리기 (undo)
     const stateSnapshots = [];
 
+    function updateUndoBtn() {
+      undoBtn.disabled = stateSnapshots.length === 0;
+    }
+
+    function undoLastChoice() {
+      if (stateSnapshots.length === 0) return;
+      restoreStateSnapshot();
+      if (stateSnapshots.length > 0) {
+        history.back();
+      }
+      updateUndoBtn();
+    }
+
+    undoBtn.addEventListener('click', undoLastChoice);
+
     function saveStateSnapshot() {
       stateSnapshots.push(JSON.stringify({
         currentRound: state.currentRound.map(b => b.name),
@@ -851,6 +869,7 @@
         rankings: state.rankings.map(b => b.name),
       }));
       history.pushState({ gameStep: stateSnapshots.length }, '');
+      updateUndoBtn();
     }
 
     function restoreStateSnapshot() {
@@ -875,6 +894,7 @@
 
       stopAllAudio();
       loadMatch();
+      updateUndoBtn();
       return true;
     }
 
